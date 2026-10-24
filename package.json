@@ -18,12 +18,16 @@
     "build": "tsdown && cp src/mod.css dist/mod.css",
     "lint": "tsc --noEmit && knip && oxlint src",
     "format": "oxfmt --write src",
-    "format:check": "oxfmt --check src"
+    "format:check": "oxfmt --check src",
+    "ci:version": "changeset version && bun run build && git add .",
+    "ci:publish": "changeset publish"
   },
   "dependencies": {
     "thinking-orbs": "^0.3.2"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^1.0.1",
+    "@changesets/cli": "^3.0.3",
     "@robot-inventor/oxlint-config": "^0.5.2",
     "@robot-inventor/tsconfig-base": "^7.2.0",
     "knip": "^6.43.0",
