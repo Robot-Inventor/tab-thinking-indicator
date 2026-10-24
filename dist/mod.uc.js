@@ -1029,6 +1029,25 @@
 		return resolved;
 	}
 
+// src/completion.ts
+	const dots = /* @__PURE__ */ new WeakMap();
+	const clearCompletionDot = (tab) => {
+		dots.get(tab)?.remove();
+		dots.delete(tab);
+	};
+	const showCompletionDot = (tab) => {
+		const stack = tab.querySelector(".tab-icon-stack");
+		if (!stack || dots.has(tab)) return;
+		const dot = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
+		dot.className = "tab-thinking-completion-dot";
+		dot.setAttribute("aria-hidden", "true");
+		stack.appendChild(dot);
+		dots.set(tab, dot);
+	};
+	const onTabSelect = (event) => {
+		clearCompletionDot(event.target);
+	};
+
 // src/mod.ts
 	const SHOW_DELAY_MS = 300;
 	const ORB_CSS_SIZE = 16;
@@ -1082,6 +1101,7 @@
 	const hideOrb = (tab) => {
 		const orb = orbs.get(tab);
 		if (!orb) return;
+		orb.generating = false;
 		if (orb.showTimer !== null) {
 			window.clearTimeout(orb.showTimer);
 			orb.showTimer = null;
@@ -1167,41 +1187,54 @@
 			orb = {
 				canvas,
 				ctx,
+				generating: false,
 				showTimer: null,
 				visible: false
 			};
 			orbs.set(tab, orb);
 		}
+		clearCompletionDot(tab);
+		orb.generating = true;
 		showOrb(tab);
 	};
 	const onGenerationEvent = (event) => {
 		const { browser, generating, progress } = event.detail;
-		onGenerationState(browser, generating);
 		const tab = gBrowser.getTabForBrowser(browser);
 		if (!tab) return;
+		const completed = !generating && orbs.get(tab)?.generating;
+		onGenerationState(browser, generating);
 		updateProgressTitle(tab, generating ? progress : "");
+		if (completed && tab !== gBrowser.selectedTab) showCompletionDot(tab);
 	};
 	const tabsProgressListener = { onStateChange(...args) {
 		const browser = args[0];
-		if ((args[3] & 131073) === 131073) onGenerationState(browser, false);
+		if ((args[3] & 131073) === 131073) {
+			const tab = gBrowser.getTabForBrowser(browser);
+			if (tab) clearCompletionDot(tab);
+			onGenerationState(browser, false);
+		}
 	} };
 	const onTabClose = (event) => {
 		const tab = event.target;
 		clearProgressTitle(tab);
+		clearCompletionDot(tab);
 		hideOrb(tab);
 		orbs.delete(tab);
 	};
 	const cleanup = () => {
 		window.removeEventListener(EVENT_NAME, onGenerationEvent);
 		gBrowser.tabContainer.removeEventListener("TabClose", onTabClose);
+		gBrowser.tabContainer.removeEventListener("TabSelect", onTabSelect);
 		gBrowser.removeTabsProgressListener(tabsProgressListener);
 		for (const tab of [...orbs.keys()]) {
 			clearProgressTitle(tab);
+			clearCompletionDot(tab);
 			hideOrb(tab);
 			orbs.delete(tab);
 		}
 	};
 	gBrowser.tabContainer.addEventListener("TabClose", onTabClose);
+	gBrowser.tabContainer.addEventListener("TabSelect", onTabSelect);
 	gBrowser.addTabsProgressListener(tabsProgressListener);
 	window.addEventListener(EVENT_NAME, onGenerationEvent);
 	window.addEventListener("unload", cleanup, { once: true });
