@@ -10,6 +10,7 @@ Currently, only the combination of Zen Browser and ChatGPT is supported.
 
 - Replace the favicon of a tab currently in the reasoning process with [Thinking Orbs](https://github.com/Jakubantalik/thinking-orbs)
 - Display the reasoning step in the tab title
+- Show a badge on tabs where the agent has completed its task
 
 ## Installation
 
