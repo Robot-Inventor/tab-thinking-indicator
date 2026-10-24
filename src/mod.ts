@@ -1,47 +1,31 @@
+import { type BrowserElement, EVENT_NAME, type GenerationDetail } from "./shared";
 import { MODE_DRAWS, resolvePreset } from "thinking-orbs/engine";
 
-const MOD_ID = "io.roboin.tab-thinking-indicator";
-const MESSAGE_NAME = `${MOD_ID}:generating`;
-const FRAME_SCRIPT_URL = `chrome://sine/content/${MOD_ID}/dist/frame.js`;
-
 const SHOW_DELAY_MS = 300;
-
 const ORB_CSS_SIZE = 16;
 const DRAW_SIZE = 20;
 const MAX_DPR = 2;
+const FALLBACK_DPR = 1;
 const MS_PER_SECOND = 1000;
+const ORIGIN = 0;
 
-interface MessageManager {
-    loadFrameScript(url: string, allowDelayed: boolean): void;
-    removeDelayedFrameScript(url: string): void;
-    addMessageListener(name: string, listener: MessageListener): void;
-    removeMessageListener(name: string, listener: MessageListener): void;
-}
-
-interface MessageListener {
-    receiveMessage(message: BrowserMessage): void;
-}
-
-interface BrowserMessage {
-    target: BrowserElement;
-    data: { generating: boolean };
-}
-
-interface BrowserElement {
-    messageManager: MessageManager;
-}
+const STATE_START = 0x1;
+const STATE_IS_DOCUMENT = 0x20000;
 
 interface Tab extends Element {
     linkedBrowser: BrowserElement;
 }
 
 interface GBrowser {
-    tabs: Tab[];
+    addTabsProgressListener(listener: TabsProgressListener): void;
+    removeTabsProgressListener(listener: TabsProgressListener): void;
     getTabForBrowser(browser: BrowserElement): Tab | null;
     tabContainer: Element;
 }
 
-declare const gBrowser: GBrowser;
+interface TabsProgressListener {
+    onStateChange(...args: unknown[]): void;
+}
 
 interface TabOrb {
     canvas: HTMLCanvasElement;
@@ -50,19 +34,19 @@ interface TabOrb {
     visible: boolean;
 }
 
+declare const gBrowser: GBrowser;
+
 const preset = resolvePreset("composing", DRAW_SIZE);
 const orbs = new Map<Tab, TabOrb>();
 
-let rafId = 0;
+let rafId: number | null = null;
 let dpr = Number.NaN;
 
 const updateDpr = (): void => {
-    // oxlint-disable-next-line no-magic-numbers
-    const current = Math.min(window.devicePixelRatio || 1, MAX_DPR);
+    const current = Math.min(window.devicePixelRatio || FALLBACK_DPR, MAX_DPR);
     if (current === dpr) return;
 
     dpr = current;
-
     for (const orb of orbs.values()) {
         orb.canvas.width = ORB_CSS_SIZE * dpr;
         orb.canvas.height = ORB_CSS_SIZE * dpr;
@@ -70,8 +54,7 @@ const updateDpr = (): void => {
 };
 
 const render = (now: number): void => {
-    // oxlint-disable-next-line no-magic-numbers
-    rafId = 0;
+    rafId = null;
     updateDpr();
 
     const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -80,15 +63,12 @@ const render = (now: number): void => {
     let animating = false;
 
     for (const orb of orbs.values()) {
-        // oxlint-disable-next-line no-continue
-        if (!orb.visible) continue;
-
-        // oxlint-disable-next-line no-magic-numbers
-        orb.ctx.setTransform(scale, 0, 0, scale, 0, 0);
-        // oxlint-disable-next-line no-magic-numbers
-        orb.ctx.clearRect(0, 0, DRAW_SIZE, DRAW_SIZE);
-        MODE_DRAWS[preset.mode](orb.ctx, DRAW_SIZE, time, dark, preset.opts);
-        animating = true;
+        if (orb.visible) {
+            orb.ctx.setTransform(scale, ORIGIN, ORIGIN, scale, ORIGIN, ORIGIN);
+            orb.ctx.clearRect(ORIGIN, ORIGIN, DRAW_SIZE, DRAW_SIZE);
+            MODE_DRAWS[preset.mode](orb.ctx, DRAW_SIZE, time, dark, preset.opts);
+            animating = true;
+        }
     }
 
     if (animating) {
@@ -114,9 +94,7 @@ const showOrb = (tab: Tab): void => {
         tab.setAttribute("tab-thinking-active", "true");
         orb.visible = true;
 
-        if (!rafId) {
-            rafId = window.requestAnimationFrame(render);
-        }
+        rafId ??= window.requestAnimationFrame(render);
     }, SHOW_DELAY_MS);
 };
 
@@ -158,11 +136,11 @@ const createCanvas = (): { canvas: HTMLCanvasElement; ctx: CanvasRenderingContex
     };
 };
 
-const onGenerationState = (message: BrowserMessage): void => {
-    const tab = gBrowser.getTabForBrowser(message.target);
+const onGenerationState = (browser: BrowserElement, generating: boolean): void => {
+    const tab = gBrowser.getTabForBrowser(browser);
     if (!tab) return;
 
-    if (!message.data.generating) {
+    if (!generating) {
         hideOrb(tab);
         return;
     }
@@ -183,27 +161,21 @@ const onGenerationState = (message: BrowserMessage): void => {
     showOrb(tab);
 };
 
-const messageListener = {
-    receiveMessage(message) {
-        onGenerationState(message);
+const onGenerationEvent = (event: Event): void => {
+    const { browser, generating } = (event as CustomEvent<GenerationDetail>).detail;
+    onGenerationState(browser, generating);
+};
+
+const tabsProgressListener: TabsProgressListener = {
+    onStateChange(...args: unknown[]): void {
+        const browser = args[0] as BrowserElement;
+        const stateFlags = args[3] as number;
+
+        // oxlint-disable-next-line no-bitwise
+        if ((stateFlags & (STATE_START | STATE_IS_DOCUMENT)) === (STATE_START | STATE_IS_DOCUMENT)) {
+            onGenerationState(browser, false);
+        }
     }
-} as const satisfies MessageListener;
-
-const injectTab = (tab: Tab): void => {
-    const { messageManager } = tab.linkedBrowser;
-    messageManager.loadFrameScript(FRAME_SCRIPT_URL, true);
-    messageManager.addMessageListener(MESSAGE_NAME, messageListener);
-};
-
-const uninjectTab = (tab: Tab): void => {
-    const { messageManager } = tab.linkedBrowser;
-
-    messageManager.removeMessageListener(MESSAGE_NAME, messageListener);
-    messageManager.removeDelayedFrameScript(FRAME_SCRIPT_URL);
-};
-
-const onTabOpen = (event: Event): void => {
-    injectTab(event.target as Tab);
 };
 
 const onTabClose = (event: Event): void => {
@@ -211,12 +183,12 @@ const onTabClose = (event: Event): void => {
 
     hideOrb(tab);
     orbs.delete(tab);
-    uninjectTab(tab);
 };
 
 const cleanup = (): void => {
-    gBrowser.tabContainer.removeEventListener("TabOpen", onTabOpen);
+    window.removeEventListener(EVENT_NAME, onGenerationEvent);
     gBrowser.tabContainer.removeEventListener("TabClose", onTabClose);
+    gBrowser.removeTabsProgressListener(tabsProgressListener);
 
     for (const tab of [...orbs.keys()]) {
         hideOrb(tab);
@@ -224,10 +196,7 @@ const cleanup = (): void => {
     }
 };
 
-for (const tab of gBrowser.tabs) {
-    injectTab(tab);
-}
-
-gBrowser.tabContainer.addEventListener("TabOpen", onTabOpen);
 gBrowser.tabContainer.addEventListener("TabClose", onTabClose);
+gBrowser.addTabsProgressListener(tabsProgressListener);
+window.addEventListener(EVENT_NAME, onGenerationEvent);
 window.addEventListener("unload", cleanup, { once: true });

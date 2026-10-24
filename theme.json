@@ -7,6 +7,10 @@
     "homepage": "https://github.com/Robot-Inventor/tab-thinking-indicator",
     "fork": ["zen"],
     "scripts": {
+        "dist/background.sys.mjs": {
+            "name": "Actor registration",
+            "description": "Registers the window actor that watches ChatGPT pages."
+        },
         "dist/mod.uc.js": {
             "name": "Tab Thinking Indicator",
             "description": "Shows a thinking orb in the favicon of tabs that are generating text.",
