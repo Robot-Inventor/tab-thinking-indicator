@@ -16,10 +16,10 @@
   "type": "module",
   "scripts": {
     "build": "tsdown && cp src/mod.css dist/mod.css",
-    "lint": "tsc --noEmit && knip && oxlint src",
+    "lint": "tsc --noEmit && knip && oxlint src scripts",
     "format": "oxfmt --write src",
     "format:check": "oxfmt --check src",
-    "ci:version": "changeset version && bun run build && git add .",
+    "ci:version": "changeset version && bun run build && bun scripts/sync-version.ts && oxfmt --write theme.json && git add .",
     "ci:publish": "changeset publish"
   },
   "dependencies": {
@@ -30,6 +30,7 @@
     "@changesets/cli": "^3.0.3",
     "@robot-inventor/oxlint-config": "^0.5.2",
     "@robot-inventor/tsconfig-base": "^7.2.0",
+    "@types/node": "^26.6.5",
     "knip": "^6.43.0",
     "oxfmt": "^0.74.0",
     "oxlint": "^1.89.0",
