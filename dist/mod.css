@@ -15,3 +15,16 @@
 .tabbrowser-tab[tab-thinking-progress] .tab-label-container > .tab-label:not(.tab-thinking-progress-label) {
     display: none !important;
 }
+
+.tab-icon-stack > .tab-thinking-completion-dot {
+    grid-area: 1 / 1;
+    place-self: center start;
+    width: 6px;
+    height: 6px;
+    margin-left: 13px;
+    margin-top: 11px;
+    border-radius: 50%;
+    background-color: #22c55e;
+    z-index: 1;
+    pointer-events: none;
+}

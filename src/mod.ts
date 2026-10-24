@@ -1,5 +1,13 @@
-import { type BrowserElement, EVENT_NAME, type GenerationDetail } from "./shared";
+import {
+    type BrowserElement,
+    EVENT_NAME,
+    type GBrowser,
+    type GenerationDetail,
+    type Tab,
+    type TabsProgressListener
+} from "./shared";
 import { MODE_DRAWS, resolvePreset } from "thinking-orbs/engine";
+import { clearCompletionDot, onTabSelect, showCompletionDot } from "./completion";
 
 const SHOW_DELAY_MS = 300;
 const ORB_CSS_SIZE = 16;
@@ -12,26 +20,12 @@ const ORIGIN = 0;
 const STATE_START = 0x1;
 const STATE_IS_DOCUMENT = 0x20000;
 
-interface Tab extends Element {
-    linkedBrowser: BrowserElement;
-}
-
-interface GBrowser {
-    addTabsProgressListener(listener: TabsProgressListener): void;
-    removeTabsProgressListener(listener: TabsProgressListener): void;
-    getTabForBrowser(browser: BrowserElement): Tab | null;
-    tabContainer: Element;
-}
-
-interface TabsProgressListener {
-    onStateChange(...args: unknown[]): void;
-}
-
 interface TabOrb {
     canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
     showTimer: number | null;
     visible: boolean;
+    generating: boolean;
 }
 
 declare const gBrowser: GBrowser;
@@ -110,6 +104,8 @@ const showOrb = (tab: Tab): void => {
 const hideOrb = (tab: Tab): void => {
     const orb = orbs.get(tab);
     if (!orb) return;
+
+    orb.generating = false;
 
     if (orb.showTimer !== null) {
         window.clearTimeout(orb.showTimer);
@@ -229,22 +225,30 @@ const onGenerationState = (browser: BrowserElement, generating: boolean): void =
         orb = {
             canvas,
             ctx,
+            generating: false,
             showTimer: null,
             visible: false
         };
         orbs.set(tab, orb);
     }
 
+    clearCompletionDot(tab);
+    orb.generating = true;
     showOrb(tab);
 };
 
 const onGenerationEvent = (event: Event): void => {
     const { browser, generating, progress } = (event as CustomEvent<GenerationDetail>).detail;
-    onGenerationState(browser, generating);
     const tab = gBrowser.getTabForBrowser(browser);
     if (!tab) return;
 
+    const completed = !generating && orbs.get(tab)?.generating;
+    onGenerationState(browser, generating);
     updateProgressTitle(tab, generating ? progress : "");
+
+    if (completed && tab !== gBrowser.selectedTab) {
+        showCompletionDot(tab);
+    }
 };
 
 const tabsProgressListener: TabsProgressListener = {
@@ -254,6 +258,11 @@ const tabsProgressListener: TabsProgressListener = {
 
         // oxlint-disable-next-line no-bitwise
         if ((stateFlags & (STATE_START | STATE_IS_DOCUMENT)) === (STATE_START | STATE_IS_DOCUMENT)) {
+            const tab = gBrowser.getTabForBrowser(browser);
+            if (tab) {
+                clearCompletionDot(tab);
+            }
+
             onGenerationState(browser, false);
         }
     }
@@ -263,6 +272,7 @@ const onTabClose = (event: Event): void => {
     const tab = event.target as Tab;
 
     clearProgressTitle(tab);
+    clearCompletionDot(tab);
     hideOrb(tab);
     orbs.delete(tab);
 };
@@ -270,16 +280,19 @@ const onTabClose = (event: Event): void => {
 const cleanup = (): void => {
     window.removeEventListener(EVENT_NAME, onGenerationEvent);
     gBrowser.tabContainer.removeEventListener("TabClose", onTabClose);
+    gBrowser.tabContainer.removeEventListener("TabSelect", onTabSelect);
     gBrowser.removeTabsProgressListener(tabsProgressListener);
 
     for (const tab of [...orbs.keys()]) {
         clearProgressTitle(tab);
+        clearCompletionDot(tab);
         hideOrb(tab);
         orbs.delete(tab);
     }
 };
 
 gBrowser.tabContainer.addEventListener("TabClose", onTabClose);
+gBrowser.tabContainer.addEventListener("TabSelect", onTabSelect);
 gBrowser.addTabsProgressListener(tabsProgressListener);
 window.addEventListener(EVENT_NAME, onGenerationEvent);
 window.addEventListener("unload", cleanup, { once: true });

@@ -14,4 +14,29 @@ interface GenerationDetail {
     progress: string;
 }
 
-export { MESSAGE_NAME, EVENT_NAME, GENERATING_SELECTOR, type BrowserElement, type GenerationDetail };
+interface Tab extends Element {
+    linkedBrowser: BrowserElement;
+}
+
+interface GBrowser {
+    addTabsProgressListener(listener: TabsProgressListener): void;
+    removeTabsProgressListener(listener: TabsProgressListener): void;
+    getTabForBrowser(browser: BrowserElement): Tab | null;
+    selectedTab: Tab;
+    tabContainer: Element;
+}
+
+interface TabsProgressListener {
+    onStateChange(...args: unknown[]): void;
+}
+
+export {
+    MESSAGE_NAME,
+    EVENT_NAME,
+    GENERATING_SELECTOR,
+    type BrowserElement,
+    type GBrowser,
+    type GenerationDetail,
+    type Tab,
+    type TabsProgressListener
+};
