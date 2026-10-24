@@ -1,0 +1,19 @@
+{
+    "id": "io.roboin.tab-thinking-indicator",
+    "name": "Tab Thinking Indicator",
+    "description": "A Sine mod that displays AI task progress in browser tabs.",
+    "author": "Robot-Inventor",
+    "version": "0.0.0",
+    "homepage": "https://github.com/Robot-Inventor/tab-thinking-indicator",
+    "fork": ["zen"],
+    "scripts": {
+        "dist/mod.uc.js": {
+            "name": "Tab Thinking Indicator",
+            "description": "Shows a thinking orb in the favicon of tabs that are generating text.",
+            "include": ["chrome://browser/content/browser.xhtml"]
+        }
+    },
+    "style": {
+        "chrome": "dist/mod.css"
+    }
+}

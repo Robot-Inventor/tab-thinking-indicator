@@ -1,0 +1,14 @@
+{
+    "$schema": "https://www.schemastore.org/prettierrc.json",
+    "printWidth": 120,
+    "tabWidth": 4,
+    "trailingComma": "none",
+    "overrides": [
+        {
+            "files": ["package.json"],
+            "options": {
+                "tabWidth": 2
+            }
+        }
+    ]
+}

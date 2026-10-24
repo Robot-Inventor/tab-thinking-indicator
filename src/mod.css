@@ -1,0 +1,13 @@
+/* Ref: https://github.com/z1n-k/zia/blob/1c6751193b29b241cdcc05d24a1edc601e19a62b/src/css/28-ultra.css */
+
+.tab-icon-stack > canvas.tab-thinking-indicator-orb {
+    grid-area: 1 / 1;
+    place-self: center start;
+    width: 16px;
+    height: 16px;
+    pointer-events: none;
+}
+
+.tabbrowser-tab[tab-thinking-active] :is(.tab-throbber, .tab-icon-pending, .tab-icon-image) {
+    visibility: hidden !important;
+}

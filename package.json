@@ -1,0 +1,35 @@
+{
+  "name": "tab-thinking-indicator",
+  "version": "0.0.0",
+  "description": "A Sine mod that displays AI task progress in browser tabs.",
+  "homepage": "https://github.com/Robot-Inventor/tab-thinking-indicator#readme",
+  "private": true,
+  "bugs": {
+    "url": "https://github.com/Robot-Inventor/tab-thinking-indicator/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Robot-Inventor/tab-thinking-indicator.git"
+  },
+  "license": "MIT",
+  "author": "Robot-Inventor",
+  "type": "module",
+  "scripts": {
+    "build": "tsdown && cp src/mod.css dist/mod.css",
+    "lint": "tsc --noEmit && knip && oxlint src",
+    "format": "prettier --write src",
+    "format:check": "prettier --check src"
+  },
+  "devDependencies": {
+    "@robot-inventor/oxlint-config": "^0.5.2",
+    "@robot-inventor/tsconfig-base": "^7.2.0",
+    "knip": "^6.43.0",
+    "oxlint": "^1.89.0",
+    "prettier": "^3.9.10",
+    "tsdown": "^0.23.2",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "thinking-orbs": "^0.3.2"
+  }
+}
