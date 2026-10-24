@@ -18,6 +18,10 @@ export default [
         },
         entry: {
             "mod.uc": "src/mod.ts"
+        },
+        format: "iife",
+        outputOptions: {
+            entryFileNames: "mod.uc.js"
         }
     }),
     defineConfig({
