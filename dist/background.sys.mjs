@@ -7,9 +7,9 @@ try {
 			events: {
 				DOMContentLoaded: {},
 				pageshow: {}
-			},
-			matches: ["https://chatgpt.com/*"]
+			}
 		},
+		matches: ["https://chatgpt.com/*"],
 		parent: { esModuleURI: `chrome://sine/content/${MOD_ID}/dist/actor-parent.sys.mjs` }
 	});
 } catch {}
