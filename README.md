@@ -4,6 +4,11 @@ A Sine mod that displays AI task progress in browser tabs.
 
 Currently, only the combination of Zen Browser and ChatGPT is supported.
 
+## Features
+
+- Replace the favicon of a tab currently in the reasoning process with [Thinking Orbs](https://github.com/Jakubantalik/thinking-orbs)
+- Display the reasoning step in the tab title
+
 ## Installation
 
 1. Install [Sine](https://github.com/CosmoCreeper/Sine) in Zen Browser.
