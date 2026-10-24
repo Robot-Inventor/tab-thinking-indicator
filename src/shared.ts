@@ -3,7 +3,9 @@ const EVENT_NAME = "tab-thinking-indicator:generating";
 const GENERATING_SELECTOR = 'svg.icon-primary-action > path[d^="M4.5 5.75C4.5"]';
 
 interface BrowserElement {
-    ownerGlobal: Window;
+    ownerDocument?: {
+        defaultView?: Window | null;
+    };
 }
 
 interface GenerationDetail {

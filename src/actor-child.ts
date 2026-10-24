@@ -23,7 +23,6 @@ class TabThinkingIndicatorChild extends JSWindowActorChild {
             childList: true,
             subtree: true
         });
-        reported = null;
         report();
     }
 }

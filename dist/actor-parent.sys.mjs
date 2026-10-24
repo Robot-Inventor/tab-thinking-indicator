@@ -6,7 +6,9 @@ var TabThinkingIndicatorParent = class extends JSWindowActorParent {
 	receiveMessage(message) {
 		const browser = this.browsingContext?.top?.embedderElement;
 		if (!browser) return;
-		browser.ownerGlobal.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: {
+		const chromeWindow = browser.ownerDocument?.defaultView;
+		if (!chromeWindow) return;
+		chromeWindow.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: {
 			browser,
 			generating: message.data.generating
 		} }));

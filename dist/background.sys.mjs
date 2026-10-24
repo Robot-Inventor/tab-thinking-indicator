@@ -10,6 +10,7 @@ try {
 			}
 		},
 		matches: ["https://chatgpt.com/*"],
-		parent: { esModuleURI: `chrome://sine/content/${MOD_ID}/dist/actor-parent.sys.mjs` }
+		parent: { esModuleURI: `chrome://sine/content/${MOD_ID}/dist/actor-parent.sys.mjs` },
+		safeForUntrustedWebProcess: true
 	});
 } catch {}
