@@ -11,3 +11,7 @@
 .tabbrowser-tab[tab-thinking-active] :is(.tab-throbber, .tab-icon-pending, .tab-icon-image) {
     visibility: hidden !important;
 }
+
+.tabbrowser-tab[tab-thinking-progress] .tab-label-container > .tab-label:not(.tab-thinking-progress-label) {
+    display: none !important;
+}

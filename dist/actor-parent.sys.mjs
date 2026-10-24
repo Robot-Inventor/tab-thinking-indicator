@@ -10,7 +10,8 @@ var TabThinkingIndicatorParent = class extends JSWindowActorParent {
 		if (!chromeWindow) return;
 		chromeWindow.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: {
 			browser,
-			generating: message.data.generating
+			generating: message.data.generating,
+			progress: message.data.progress
 		} }));
 	}
 };

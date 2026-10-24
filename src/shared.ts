@@ -11,6 +11,7 @@ interface BrowserElement {
 interface GenerationDetail {
     browser: BrowserElement;
     generating: boolean;
+    progress: string;
 }
 
 export { MESSAGE_NAME, EVENT_NAME, GENERATING_SELECTOR, type BrowserElement, type GenerationDetail };

@@ -8,18 +8,25 @@ class TabThinkingIndicatorChild extends JSWindowActorChild {
 
         const { document, MutationObserver } = this.contentWindow;
         let reported: boolean | null = null;
+        let reportedProgress = "";
 
         const report = (): void => {
             const generating = document.querySelector(GENERATING_SELECTOR) !== null;
-            if (generating === reported) return;
+            const paragraphs = Array.from(
+                document.querySelectorAll('[data-markdown-text-tone="tertiary"] .Paragraph-kKnbIo')
+            );
+            const progress = generating ? (paragraphs.pop()?.textContent.trim() ?? "") : "";
+            if (generating === reported && progress === reportedProgress) return;
 
             reported = generating;
-            this.sendAsyncMessage(MESSAGE_NAME, { generating });
+            reportedProgress = progress;
+            this.sendAsyncMessage(MESSAGE_NAME, { generating, progress });
         };
 
         this.#observer ??= new MutationObserver(report);
         this.#observer.observe(document.documentElement, {
             attributes: true,
+            characterData: true,
             childList: true,
             subtree: true
         });

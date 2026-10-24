@@ -8,5 +8,5 @@ declare class JSWindowActorParent {
             };
         };
     };
-    public receiveMessage(message: { name: string; data: { generating: boolean } }): void;
+    public receiveMessage(message: { name: string; data: { generating: boolean; progress: string } }): void;
 }

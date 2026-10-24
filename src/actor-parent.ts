@@ -1,7 +1,7 @@
 import { EVENT_NAME, type GenerationDetail } from "./shared";
 
 class TabThinkingIndicatorParent extends JSWindowActorParent {
-    public override receiveMessage(message: { data: { generating: boolean } }): void {
+    public override receiveMessage(message: { data: { generating: boolean; progress: string } }): void {
         const browser = this.browsingContext?.top?.embedderElement;
         if (!browser) return;
 
@@ -12,7 +12,8 @@ class TabThinkingIndicatorParent extends JSWindowActorParent {
             new CustomEvent<GenerationDetail>(EVENT_NAME, {
                 detail: {
                     browser,
-                    generating: message.data.generating
+                    generating: message.data.generating,
+                    progress: message.data.progress
                 }
             })
         );

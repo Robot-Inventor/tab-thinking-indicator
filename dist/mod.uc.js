@@ -1039,6 +1039,7 @@
 	const ORIGIN = 0;
 	const preset = resolvePreset("composing", DRAW_SIZE);
 	const orbs = /* @__PURE__ */ new Map();
+	const progressTitles = /* @__PURE__ */ new Map();
 	let rafId = null;
 	let dpr = NaN;
 	const updateDpr = () => {
@@ -1107,10 +1108,56 @@
 			ctx
 		};
 	};
+	const clearProgressTitle = (tab) => {
+		const entry = progressTitles.get(tab);
+		if (!entry) return;
+		entry.observer.disconnect();
+		entry.label.remove();
+		tab.removeAttribute("tab-thinking-progress");
+		progressTitles.delete(tab);
+	};
+	const syncProgressLabel = (label, original, title) => {
+		for (const name of label.getAttributeNames()) label.removeAttribute(name);
+		for (const attribute of original.attributes) label.setAttribute(attribute.name, attribute.value);
+		label.removeAttribute("id");
+		label.classList.add("tab-thinking-progress-label");
+		label.textContent = title;
+		for (const name of ["value", "text"]) if (original.hasAttribute(name)) label.setAttribute(name, title);
+	};
+	const updateProgressTitle = (tab, progress) => {
+		if (!progress) {
+			clearProgressTitle(tab);
+			return;
+		}
+		let entry = progressTitles.get(tab);
+		if (!entry) {
+			const original = tab.querySelector(".tab-label-container > .tab-label:not(.tab-thinking-progress-label)");
+			if (!original) return;
+			const label = original.cloneNode(false);
+			if (!(label instanceof Element)) return;
+			const observer = new MutationObserver(() => {
+				updateProgressTitle(tab, progressTitles.get(tab)?.progress ?? "");
+			});
+			observer.observe(tab, { attributeFilter: ["label"] });
+			observer.observe(original, { attributes: true });
+			original.after(label);
+			entry = {
+				label,
+				observer,
+				original,
+				progress
+			};
+			progressTitles.set(tab, entry);
+			tab.setAttribute("tab-thinking-progress", "true");
+		}
+		entry.progress = progress;
+		syncProgressLabel(entry.label, entry.original, `${progress}: ${tab.getAttribute("label") ?? ""}`);
+	};
 	const onGenerationState = (browser, generating) => {
 		const tab = gBrowser.getTabForBrowser(browser);
 		if (!tab) return;
 		if (!generating) {
+			clearProgressTitle(tab);
 			hideOrb(tab);
 			return;
 		}
@@ -1128,8 +1175,11 @@
 		showOrb(tab);
 	};
 	const onGenerationEvent = (event) => {
-		const { browser, generating } = event.detail;
+		const { browser, generating, progress } = event.detail;
 		onGenerationState(browser, generating);
+		const tab = gBrowser.getTabForBrowser(browser);
+		if (!tab) return;
+		updateProgressTitle(tab, generating ? progress : "");
 	};
 	const tabsProgressListener = { onStateChange(...args) {
 		const browser = args[0];
@@ -1137,6 +1187,7 @@
 	} };
 	const onTabClose = (event) => {
 		const tab = event.target;
+		clearProgressTitle(tab);
 		hideOrb(tab);
 		orbs.delete(tab);
 	};
@@ -1145,6 +1196,7 @@
 		gBrowser.tabContainer.removeEventListener("TabClose", onTabClose);
 		gBrowser.removeTabsProgressListener(tabsProgressListener);
 		for (const tab of [...orbs.keys()]) {
+			clearProgressTitle(tab);
 			hideOrb(tab);
 			orbs.delete(tab);
 		}
