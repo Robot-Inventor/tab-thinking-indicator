@@ -82,7 +82,8 @@ const render = (now: number): void => {
 const showOrb = (tab: Tab): void => {
     const orb = orbs.get(tab);
 
-    if (!orb || orb.visible || orb.showTimer !== null) return;
+    const shouldShowOrb = orb && !orb.visible && orb.showTimer === null;
+    if (!shouldShowOrb) return;
 
     orb.showTimer = window.setTimeout(() => {
         orb.showTimer = null;
