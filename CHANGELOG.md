@@ -1,5 +1,11 @@
 # tab-thinking-indicator
 
+## 0.2.1
+
+### Patch Changes
+
+- [#14](https://github.com/Robot-Inventor/tab-thinking-indicator/pull/14) [`ef15d8a`](https://github.com/Robot-Inventor/tab-thinking-indicator/commit/ef15d8a1095b986dd8acb3d2f05619b003858fab) Thanks [@Robot-Inventor](https://github.com/Robot-Inventor)! - refactor: extract complex conditions
+
 ## 0.2.0
 
 ### Minor Changes

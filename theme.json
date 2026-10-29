@@ -3,7 +3,7 @@
     "name": "Tab Thinking Indicator",
     "description": "A Sine mod that displays AI task progress in browser tabs.",
     "author": "Robot-Inventor",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "homepage": "https://github.com/Robot-Inventor/tab-thinking-indicator",
     "fork": ["zen"],
     "scripts": {

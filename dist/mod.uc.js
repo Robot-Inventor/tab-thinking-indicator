@@ -1087,7 +1087,7 @@
 	};
 	const showOrb = (tab) => {
 		const orb = orbs.get(tab);
-		if (!orb || orb.visible || orb.showTimer !== null) return;
+		if (!(orb && !orb.visible && orb.showTimer === null)) return;
 		orb.showTimer = window.setTimeout(() => {
 			orb.showTimer = null;
 			const stack = tab.querySelector(".tab-icon-stack");
