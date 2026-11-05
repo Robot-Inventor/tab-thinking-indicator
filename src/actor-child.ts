@@ -15,6 +15,7 @@ class TabThinkingIndicatorChild extends JSWindowActorChild {
             const paragraphs = Array.from(
                 document.querySelectorAll('[data-markdown-text-tone="tertiary"] .Paragraph-kKnbIo')
             );
+
             const progress = generating ? (paragraphs.pop()?.textContent.trim() ?? "") : "";
             if (generating === reported && progress === reportedProgress) return;
 
@@ -30,6 +31,7 @@ class TabThinkingIndicatorChild extends JSWindowActorChild {
             childList: true,
             subtree: true
         });
+
         report();
     }
 }
