@@ -6,8 +6,10 @@ import {
     type Tab,
     type TabsProgressListener
 } from "./shared";
+// oxlint-disable-next-line roboin/logical-newline
 import { MODE_DRAWS, resolvePreset } from "thinking-orbs/engine";
 import { clearCompletionDot, onTabSelect, showCompletionDot } from "./completion";
+import { clearProgressTitle, updateProgressTitle } from "./progress-title";
 
 const SHOW_DELAY_MS = 300;
 const ORB_CSS_SIZE = 16;
@@ -32,15 +34,6 @@ declare const gBrowser: GBrowser;
 
 const preset = resolvePreset("composing", DRAW_SIZE);
 const orbs = new Map<Tab, TabOrb>();
-const progressTitles = new Map<
-    Tab,
-    {
-        label: Element;
-        observer: MutationObserver;
-        original: Element;
-        progress: string;
-    }
->();
 
 let rafId: number | null = null;
 let dpr = Number.NaN;
@@ -142,73 +135,6 @@ const createCanvas = (): { canvas: HTMLCanvasElement; ctx: CanvasRenderingContex
     };
 };
 
-const clearProgressTitle = (tab: Tab): void => {
-    const entry = progressTitles.get(tab);
-    if (!entry) return;
-
-    entry.observer.disconnect();
-    entry.label.remove();
-    tab.removeAttribute("tab-thinking-progress");
-    progressTitles.delete(tab);
-};
-
-const syncProgressLabel = (label: Element, original: Element, title: string): void => {
-    for (const name of label.getAttributeNames()) {
-        label.removeAttribute(name);
-    }
-
-    for (const attribute of original.attributes) {
-        label.setAttribute(attribute.name, attribute.value);
-    }
-
-    label.removeAttribute("id");
-    label.classList.add("tab-thinking-progress-label");
-    label.textContent = title;
-
-    for (const name of ["value", "text"]) {
-        if (original.hasAttribute(name)) {
-            label.setAttribute(name, title);
-        }
-    }
-};
-
-const updateProgressTitle = (tab: Tab, progress: string): void => {
-    if (!progress) {
-        clearProgressTitle(tab);
-        return;
-    }
-
-    let entry = progressTitles.get(tab);
-
-    if (!entry) {
-        const original = tab.querySelector(".tab-label-container > .tab-label:not(.tab-thinking-progress-label)");
-        if (!original) return;
-
-        const label = original.cloneNode(false);
-        if (!(label instanceof Element)) return;
-
-        const observer = new MutationObserver(() => {
-            updateProgressTitle(tab, progressTitles.get(tab)?.progress ?? "");
-        });
-        observer.observe(tab, { attributeFilter: ["label"] });
-        observer.observe(original, { attributes: true });
-        original.after(label);
-
-        entry = {
-            label,
-            observer,
-            original,
-            progress
-        } as const;
-        progressTitles.set(tab, entry);
-        tab.setAttribute("tab-thinking-progress", "true");
-    }
-
-    entry.progress = progress;
-
-    syncProgressLabel(entry.label, entry.original, `${progress}: ${tab.getAttribute("label") ?? ""}`);
-};
-
 const onGenerationState = (browser: BrowserElement, generating: boolean): void => {
     const tab = gBrowser.getTabForBrowser(browser);
     if (!tab) return;
@@ -216,6 +142,7 @@ const onGenerationState = (browser: BrowserElement, generating: boolean): void =
     if (!generating) {
         clearProgressTitle(tab);
         hideOrb(tab);
+
         return;
     }
 
@@ -230,6 +157,7 @@ const onGenerationState = (browser: BrowserElement, generating: boolean): void =
             showTimer: null,
             visible: false
         };
+
         orbs.set(tab, orb);
     }
 

@@ -1,7 +1,7 @@
 import { defineConfig } from "oxlint";
-import { oxlintConfigNoJSDoc } from "@robot-inventor/oxlint-config";
+import { oxlintConfig } from "@robot-inventor/oxlint-config";
 
 export default defineConfig({
-    ...oxlintConfigNoJSDoc,
+    ...oxlintConfig,
     ignorePatterns: ["dist/**"]
 });
